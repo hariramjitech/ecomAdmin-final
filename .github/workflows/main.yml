@@ -1,0 +1,95 @@
+name: CI & CD
+
+
+on:
+push:
+branches: [ "main" ]
+pull_request:
+branches: [ "main" ]
+workflow_dispatch: {}
+
+
+permissions:
+contents: read
+packages: write # for GHCR push
+
+
+jobs:
+# --- PR CI: run tests (does not build/publish images) ---
+pr-ci:
+if: ${{ github.event_name == 'pull_request' }}
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+
+
+# Backend: Maven tests (adjust JDK if needed)
+- name: Setup Temurin JDK 21
+uses: actions/setup-java@v4
+with:
+distribution: 'temurin'
+java-version: '21'
+cache: 'maven'
+
+
+- name: Backend — mvn test
+working-directory: springapp
+run: mvn -B -DskipTests=false test
+
+
+# Frontend: build check
+- name: Use Node 18
+uses: actions/setup-node@v4
+with:
+node-version: 18
+cache: 'npm'
+cache-dependency-path: frontend/package-lock.json
+
+
+- name: Frontend — npm ci && build
+working-directory: frontend
+run: |
+npm ci
+npm run build
+
+
+# --- Main branch: build artifacts, dockerize, and push to GHCR ---
+build-and-push:
+if: ${{ github.event_name != 'pull_request' }}
+runs-on: ubuntu-latest
+env:
+REGISTRY: ghcr.io
+IMAGE_BACKEND: ${{ github.repository_owner }}/ecom-backend
+IMAGE_FRONTEND: ${{ github.repository_owner }}/ecom-frontend
+steps:
+- uses: actions/checkout@v4
+
+
+# === Backend build (skip tests here to avoid blocking deploy if flaky) ===
+- name: Setup Temurin JDK 21
+uses: actions/setup-java@v4
+with:
+distribution: 'temurin'
+java-version: '21'
+cache: 'maven'
+- name: Backend — package
+working-directory: springapp
+run: mvn -B -DskipTests clean package
+- name: Upload backend jar artifact
+uses: actions/upload-artifact@v4
+with:
+name: backend-jar
+path: springapp/target/*.jar
+
+
+# === Frontend build ===
+- name: Use Node 18
+uses: actions/setup-node@v4
+with:
+node-version: 18
+cache: 'npm'
+cache-dependency-path: frontend/package-lock.json
+- name: Frontend — npm ci & build
+working-directory: frontend
+run: |
+ghcr.io/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
