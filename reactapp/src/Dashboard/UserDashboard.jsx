@@ -33,14 +33,11 @@ const UserDashboard = () => {
     role: localStorage.getItem("userRole") || "USER",
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("userId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    navigate("/login");
-  };
+const handleLogout = () => {
+  localStorage.clear();
+  console.log("After logout:", { ...localStorage }); // check what's left
+  navigate("/login");
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex">

@@ -44,16 +44,11 @@ const AdminDashboard = () => {
     email: localStorage.getItem("userEmail") || "admin@example.com",
     role: localStorage.getItem("userRole") || "ADMIN"
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem("userId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    navigate("/");
-  };
-
+const handleLogout = () => {
+  localStorage.clear();
+  console.log("After logout:", { ...localStorage }); // check what's left
+  navigate("/login");
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
       {/* Sidebar Navigation - Fixed */}

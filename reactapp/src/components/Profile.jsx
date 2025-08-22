@@ -30,18 +30,13 @@ export default function Profile() {
 
     fetchUser();
   }, []);
+  
+const handleLogout = () => {
+  localStorage.clear();
+  console.log("After logout:", { ...localStorage }); // check what's left
+  navigate("/login");
+};
 
-  const handleLogout = () => {
-    // Clear all localStorage items
-    localStorage.removeItem("userId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    
-    // Redirect to home page
-    navigate("/login");
-  };
 
   if (loading) {
     return <div className="text-center mt-10">Loading profile...</div>;
